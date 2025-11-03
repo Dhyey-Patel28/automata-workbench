@@ -1,6 +1,6 @@
 # Automata Workbench
 
->>>[!NOTE]
+>[!NOTE]
 This document is still a work in progress.
 
 
