@@ -1,0 +1,67 @@
+{
+  "hash": "3fc3e07e",
+  "configHash": "54453bb7",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "20eb6569",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "41c389fb",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "4153bc27",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "28d5b5c6",
+      "needsInterop": true
+    },
+    "jotai": {
+      "src": "../../node_modules/jotai/esm/index.mjs",
+      "file": "jotai.js",
+      "fileHash": "82f1b43b",
+      "needsInterop": false
+    },
+    "react-gridlines": {
+      "src": "../../node_modules/react-gridlines/build/index.js",
+      "file": "react-gridlines.js",
+      "fileHash": "073eeb46",
+      "needsInterop": true
+    },
+    "clsx": {
+      "src": "../../node_modules/clsx/dist/clsx.mjs",
+      "file": "clsx.js",
+      "fileHash": "0a930ed3",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "890edbc2",
+      "needsInterop": false
+    },
+    "react-konva": {
+      "src": "../../node_modules/react-konva/es/ReactKonva.js",
+      "file": "react-konva.js",
+      "fileHash": "94f7cf82",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-M4YIAIM3": {
+      "file": "chunk-M4YIAIM3.js"
+    },
+    "chunk-4BPZ7PBZ": {
+      "file": "chunk-4BPZ7PBZ.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}
