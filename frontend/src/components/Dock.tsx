@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
 	Move3d,
 	PlusCircleIcon,
@@ -7,6 +8,7 @@ import {
 	HardDriveDownload,
 	ArrowRightFromLine,
 	BookMarked,
+	Code2,
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -16,6 +18,7 @@ import {
 	arrowStates,
 	saveFSMAtom,
 	Nodes,
+	regexToDfaAtom,
 } from "../lib/backend";
 import type { Node } from "../lib/backend";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -36,6 +39,8 @@ const Dock = () => {
 
 	const setSaveFSM = useSetAtom(saveFSMAtom);
 	const saveFSM = useAtomValue(saveFSMAtom);
+	const setRegexModal = useSetAtom(regexToDfaAtom);
+	const regexModalOpen = useAtomValue(regexToDfaAtom);
 
 	// node list
 	const nodeList: Node[] = useAtomValue(Nodes);
@@ -132,6 +137,18 @@ const Dock = () => {
 					setTransitionTracker(undefined);
 				}
 			},
+		},
+		{
+			name: "Regex to DFA",
+			condition: [!regexModalOpen, regexModalOpen],
+			icon: (
+				<Code2
+					size={DockIconSize}
+					color={DockIconColor}
+					className="pointer-events-none"
+				/>
+			),
+			onclick: () => setRegexModal(!regexModalOpen),
 		},
 
 		{

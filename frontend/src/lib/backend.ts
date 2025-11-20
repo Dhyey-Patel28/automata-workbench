@@ -1,11 +1,10 @@
-//@ts-nocheck
+// @ts-nocheck
 import { atom } from "jotai";
 
-type nodeTransition = {
-	from: string;
-	to: string;
-	name: string;
-	trID: string;
+export type NodeTransition = {
+	from?: number;
+	to?: number;
+	trId: number;
 };
 
 export type Node = {
@@ -18,40 +17,38 @@ export type Node = {
 	strokeColor: string;
 	name: string;
 	type: "initial" | "final" | "intermediate";
-	transitions: nodeTransition[];
+	transitions: NodeTransition[];
+	isFinal?: boolean;
 };
 
-type Arrow = {
-	x: number;
-	y: number;
+export type Arrow = {
+	id: number;
+	from: number;
+	to: number;
 	points: number[];
 	stroke: string;
-	strokeWidth: string;
+	strokeWidth: number;
+	fill: string;
+	name: string;
+	tension: number;
 };
 
-// Store for current editor state
 export const editorState = atom("welcome");
 
-// Store for State Machine's States
-export const Nodes: Node[] = atom([]);
+export const Nodes = atom<Node[]>([]);
 
-// Store for Keeping track of currently active selected state
 export const currentSelected = atom("nil");
 
-// Alert Message
 export const alert = atom("nil");
 
-// Store for State transitions
-export const arrows = atom([]);
+export const arrows = atom<Arrow[]>([]);
 
-// Store for tracking connections
-export const arrowStates = atom(undefined);
+export const arrowStates = atom<number | undefined>(undefined);
 
-// Store to manage visibility of save actions editor
 export const saveFSMAtom = atom(false);
 
-// Track the node whose controls were changed most recently
 export const recentStateSave = atom("nil");
 
-// Keep track of starting state
 export const start_state = atom("nil");
+
+export const regexToDfaAtom = atom(false);

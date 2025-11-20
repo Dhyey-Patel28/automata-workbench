@@ -1,9 +1,11 @@
+// @ts-nocheck
 import Alert from "./components/Alert";
 import Dock from "./components/Dock";
 import Editor from "./components/Editor";
 import Settings from "./components/Settings";
 import Error from "./components/Error";
 import Welcome from "./components/Welcome";
+import RegexToDfaModal from "./components/RegexToDfaModal";
 import { alert } from "./lib/backend";
 import { useAtomValue } from "jotai";
 
@@ -32,6 +34,8 @@ function App() {
 			</div>
 
 			<Dock />
+
+			<RegexToDfaModal />
 
 			{/* Settings Menu  */}
 			<Settings />
