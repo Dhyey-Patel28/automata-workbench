@@ -9,6 +9,7 @@ import {
 	ArrowRightFromLine,
 	BookMarked,
 	Code2,
+	Sigma,
 } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -19,6 +20,7 @@ import {
 	saveFSMAtom,
 	Nodes,
 	regexToDfaAtom,
+	dfaToRegexAtom,
 } from "../lib/backend";
 import type { Node } from "../lib/backend";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -150,7 +152,18 @@ const Dock = () => {
 			),
 			onclick: () => setRegexModal(!regexModalOpen),
 		},
-
+        {
+            name: "DFA to Regex",
+            condition: [!dfaToRegexModalOpen, dfaToRegexModalOpen],
+            icon: (
+                <Sigma
+                    size={DockIconSize}
+                    color={DockIconColor}
+                    className="pointer-events-none"
+                />
+            ),
+            onclick: () => setDfaToRegexModal(!dfaToRegexModalOpen),
+        },
 		{
 			name: "Save FSM",
 			condition: [!saveFSM, saveFSM],

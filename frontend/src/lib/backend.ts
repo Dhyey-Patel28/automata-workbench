@@ -52,3 +52,5 @@ export const recentStateSave = atom("nil");
 export const start_state = atom("nil");
 
 export const regexToDfaAtom = atom(false);
+
+export const dfaToRegexAtom = atom(false);

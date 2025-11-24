@@ -6,6 +6,7 @@ import Settings from "./components/Settings";
 import Error from "./components/Error";
 import Welcome from "./components/Welcome";
 import RegexToDfaModal from "./components/RegexToDfaModal";
+import DfaToRegexModal from "./components/DfaToRegexModal"; 
 import { alert } from "./lib/backend";
 import { useAtomValue } from "jotai";
 
