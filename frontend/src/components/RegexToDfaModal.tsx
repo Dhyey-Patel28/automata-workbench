@@ -1,4 +1,4 @@
-// @ts-nocheck
+// frontend/src/components/RegexToDfaModal.tsx
 import { useState } from "react";
 import clsx from "clsx";
 import { useAtom, useSetAtom } from "jotai";

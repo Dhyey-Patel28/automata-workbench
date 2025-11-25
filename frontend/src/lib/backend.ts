@@ -1,4 +1,4 @@
-// @ts-nocheck
+// frontend/src/lib/backend.ts
 import { atom } from "jotai";
 
 export type NodeTransition = {
@@ -52,3 +52,5 @@ export const recentStateSave = atom("nil");
 export const start_state = atom("nil");
 
 export const regexToDfaAtom = atom(false);
+
+export const dfaToRegexResultAtom = atom<string | null>(null);
