@@ -114,7 +114,7 @@ function Intro(props: { show: boolean }) {
         If you are interested to contribute, and help the project grow, feel
         free to open a pull request. Would love to see the project grow!
       </p>
-      <a href="https://github.com/karthik-saiharsh/fsm-engine" target="_blank">
+      <a href="https://github.com/karthik-saiharsh/fsm-engine/tree/ecf47d0293c1cf5d07395802e094c26694fed997" target="_blank">
         <button className="flex text-sm gap-2 font-github font-semibold mt-5 items-center rounded-xl text-white bg-blue-500 px-5 py-2 hover:scale-110 transition-all cursor-pointer active:scale-100 ease-in-out">
           View Github Repo
           <ArrowUpRight color="#ffffff" size={24} />
