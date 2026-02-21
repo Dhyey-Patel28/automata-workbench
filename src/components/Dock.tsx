@@ -6,9 +6,10 @@ import {
   Cable,
   HardDriveDownload,
   ArrowRightFromLine,
-  BookMarked,
   Code2,
   GitBranch,
+  MoreHorizontal,
+  HelpCircle,
 } from "lucide-react";
 import clsx from "clsx";
 import { nfaToMinimalDfa } from "../lib/nfaToDfa";
@@ -27,19 +28,20 @@ import {
 } from "../lib/backend";
 import type { Node } from "../lib/backend";
 import { useSetAtom, useAtomValue } from "jotai";
+import { useState } from "react";
 
 const Dock = () => {
   const DockIconSize = 24;
   const DockIconColor = "#ffffff";
 
-  // Global editor state store
+  const [toolsOpen, setToolsOpen] = useState(false);
+
   const currentState = useAtomValue(editorState);
   const setCurrentState = useSetAtom(editorState);
 
   const currSelected = useAtomValue(currentSelected);
 
   const setAlertMsg = useSetAtom(alertAtom);
-
   const setTransitionTracker = useSetAtom(arrowStates);
 
   const setSaveFSM = useSetAtom(saveFSMAtom);
@@ -48,7 +50,6 @@ const Dock = () => {
   const setRegexModal = useSetAtom(regexToDfaAtom);
   const regexModalOpen = useAtomValue(regexToDfaAtom);
 
-  // node / transition / start state atoms
   const nodeList: Node[] = useAtomValue(Nodes);
   const setNodes = useSetAtom(Nodes);
 
@@ -59,7 +60,6 @@ const Dock = () => {
   const setCurrentSelected = useSetAtom(currentSelected);
   const setRegexResult = useSetAtom(dfaToRegexResultAtom);
 
-  // helper for alerts
   const showAlert = (message: string) => {
     setAlertMsg(message);
     setTimeout(() => setAlertMsg("nil"), 3000);
@@ -72,7 +72,6 @@ const Dock = () => {
         showAlert("Could not derive a regex from the current DFA.");
         return;
       }
-      // Store regex in atom; a dedicated popup component can read & display
       setRegexResult(regex);
     } catch (err) {
       console.error(err);
@@ -82,59 +81,37 @@ const Dock = () => {
     }
   }
 
-  // Dock Items
-  const DockItems = [
+  // Always-visible modes (icon-only)
+  const ModeItems = [
     {
-      name: "Displace",
+      name: "Pan",
       condition: [currentState != "grab", currentState == "grab"],
       icon: (
-        <Move3d
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
+        <Move3d size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
       ),
-      onclick: () => {
-        setCurrentState(currentState === "grab" ? "nil" : "grab");
-      },
+      onclick: () => setCurrentState(currentState === "grab" ? "nil" : "grab"),
     },
     {
-      name: "Add",
+      name: "Add state",
       condition: [currentState != "create", currentState == "create"],
       icon: (
-        <PlusCircleIcon
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
+        <PlusCircleIcon size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
       ),
-      onclick: () => {
-        setCurrentState(currentState === "create" ? "nil" : "create");
-      },
+      onclick: () => setCurrentState(currentState === "create" ? "nil" : "create"),
     },
     {
       name: "Delete",
       condition: [currentState != "delete", currentState == "delete"],
       icon: (
-        <MinusCircleIcon
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
+        <MinusCircleIcon size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
       ),
-      onclick: () => {
-        setCurrentState(currentState === "delete" ? "nil" : "delete");
-      },
+      onclick: () => setCurrentState(currentState === "delete" ? "nil" : "delete"),
     },
     {
-      name: "Controls",
+      name: "State settings",
       condition: [currentState != "settings", currentState == "settings"],
       icon: (
-        <Settings
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
+        <Settings size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
       ),
       onclick: () => {
         if (currSelected !== "nil") {
@@ -148,11 +125,7 @@ const Dock = () => {
       name: "Connect",
       condition: [currentState != "connect", currentState == "connect"],
       icon: (
-        <Cable
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
+        <Cable size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
       ),
       onclick: () => {
         if (currentState == "connect") setCurrentState("nil");
@@ -162,40 +135,26 @@ const Dock = () => {
         }
       },
     },
+  ];
+
+  // Collapsed tools (opens from the “…” button)
+  const ToolItems = [
     {
-      name: "Regex to DFA",
-      condition: [!regexModalOpen, regexModalOpen],
-      icon: (
-        <Code2
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
+      name: "Regex → DFA",
+      active: regexModalOpen,
+      icon: <Code2 size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
       onclick: () => setRegexModal(!regexModalOpen),
     },
     {
       name: "DFA → Regex",
-      condition: [true, false],
-      icon: (
-        <Code2
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
+      active: false,
+      icon: <Code2 size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
       onclick: handleDfaToRegexClick,
     },
     {
       name: "NFA → Min DFA",
-      condition: [true, false], // not a toggle; just an action
-      icon: (
-        <GitBranch
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
+      active: false,
+      icon: <GitBranch size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
       onclick: () => {
         try {
           const result = nfaToMinimalDfa(nodeList, transitions);
@@ -216,27 +175,15 @@ const Dock = () => {
       },
     },
     {
-      name: "Save FSM",
-      condition: [!saveFSM, saveFSM],
-      icon: (
-        <HardDriveDownload
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
+      name: saveFSM ? "Save FSM (on)" : "Save FSM",
+      active: saveFSM,
+      icon: <HardDriveDownload size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
       onclick: () => setSaveFSM(!saveFSM),
     },
     {
-      name: "Export data",
-      condition: [true, false], // just an action
-      icon: (
-        <ArrowRightFromLine
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
+      name: "Export JSON",
+      active: false,
+      icon: <ArrowRightFromLine size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
       onclick: () => {
         const simplifiedJsonData = nodeList.map((node) => ({
           name: node.name,
@@ -248,43 +195,73 @@ const Dock = () => {
       },
     },
     {
-      name: "Welcome",
-      condition: [currentState != "welcome", currentState == "welcome"],
-      icon: (
-        <BookMarked
-          size={DockIconSize}
-          color={DockIconColor}
-          className="pointer-events-none"
-        />
-      ),
-      onclick: () => {
-        setCurrentState(currentState === "welcome" ? "nil" : "welcome");
-      },
+      name: "Tutorial / Help",
+      active: currentState === "welcome",
+      icon: <HelpCircle size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      onclick: () => setCurrentState(currentState === "welcome" ? "nil" : "welcome"),
     },
   ];
 
   return (
-    <div className="absolute bottom-5 w-screen h-15 flex justify-center items-center select-none max-lg:hidden">
-      <div className="w-fit px-2 h-15 z-10 bg-secondary-bg rounded-2xl border border-border-bg flex justify-center items-center gap-5 shadow-[0px_0px_40px_0px_rgba(0,0,0,0.5)]">
-        {/* Dock Items */}
-        {DockItems.map((item) => (
-          <div
+    <div className="absolute bottom-5 w-screen flex justify-center items-center select-none max-lg:hidden">
+      <div className="relative w-fit px-2 h-14 z-10 bg-secondary-bg rounded-2xl border border-border-bg flex justify-center items-center gap-2 shadow-[0px_0px_30px_0px_rgba(0,0,0,0.45)]">
+        {ModeItems.map((item) => (
+          <button
             key={item.name}
-            onClick={item.onclick}
+            type="button"
+            title={item.name}
+            onClick={() => {
+              item.onclick();
+              setToolsOpen(false);
+            }}
             className={clsx(
-              "flex gap-2 p-2 border border-border-bg rounded-xl hover:scale-110 hover:-translate-y-3 active:scale-100 cursor-pointer transition-all ease-in-out duration-300",
+              "flex items-center justify-center p-3 border border-border-bg rounded-xl cursor-pointer transition-all duration-200",
               {
-                "bg-secondary-bg": item.condition[0],
+                "bg-secondary-bg hover:scale-105": item.condition[0],
                 "bg-blue-500": item.condition[1],
               },
             )}
           >
             {item.icon}
-            <p className="text-white font-github font-semibold text-balance">
-              {item.name}
-            </p>
-          </div>
+          </button>
         ))}
+
+        <div className="h-8 w-px bg-border-bg/80 mx-1" />
+
+        <button
+          type="button"
+          title="Tools"
+          onClick={() => setToolsOpen((v) => !v)}
+          className={clsx(
+            "flex items-center justify-center p-3 border border-border-bg rounded-xl cursor-pointer transition-all duration-200 hover:scale-105",
+            { "bg-blue-500": toolsOpen, "bg-secondary-bg": !toolsOpen },
+          )}
+        >
+          <MoreHorizontal size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        </button>
+
+        {toolsOpen && (
+          <div className="absolute bottom-16 right-0 w-56 bg-primary-bg border border-border-bg rounded-2xl shadow-[0px_0px_60px_0px_rgba(0,0,0,0.55)] p-2">
+            {ToolItems.map((tool) => (
+              <button
+                key={tool.name}
+                type="button"
+                title={tool.name}
+                onClick={() => {
+                  tool.onclick();
+                  setToolsOpen(false);
+                }}
+                className={clsx(
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-xl border border-transparent hover:border-border-bg transition-all",
+                  { "bg-blue-500/20": tool.active },
+                )}
+              >
+                {tool.icon}
+                <span className="text-white font-github text-sm">{tool.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

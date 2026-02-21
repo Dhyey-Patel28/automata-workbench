@@ -33,7 +33,7 @@ export type Arrow = {
 	tension: number;
 };
 
-export const editorState = atom("welcome");
+export const editorState = atom("nil");
 
 export const Nodes = atom<Node[]>([]);
 

@@ -5,6 +5,7 @@ import Editor from "./components/Editor";
 import Settings from "./components/Settings";
 import Error from "./components/Error";
 import Welcome from "./components/Welcome";
+import Credits from "./components/Credits";
 import RegexToDfaModal from "./components/RegexToDfaModal";
 import DfaToRegexModal from "./components/DfaToRegexModal";
 import { alert} from "./lib/backend";
@@ -27,16 +28,17 @@ function App() {
           cellWidth={100}
           strokeWidth={3}
           cellWidth2={10}
-          lineColor="#ffffff33"
-          lineColor2="#ffffff1a"
+          lineColor="#ffffff1a"
+          lineColor2="#ffffff0a"
         >
           <Editor />
         </GridLines>
       </div>
 
       <Dock />
+      <Credits />
       <RegexToDfaModal />
-	  <DfaToRegexModal />
+	    <DfaToRegexModal />
       <Settings />
       <Alert message={alertMsg} />
       <Error />
