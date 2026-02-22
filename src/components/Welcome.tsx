@@ -32,7 +32,7 @@ export default function Welcome() {
   return (
     <div
       className={clsx(
-        "absolute top-0 left-0 z-20 w-screen h-screen bg-[#1e1e1ebb] flex justify-center items-center transition-all ease-in-out duration-500 max-lg:hidden",
+        "fixed inset-0 z-30 bg-[#1e1e1ebb] flex justify-center items-center transition-all ease-in-out duration-500 p-3",
         {
           "hidden pointer-events-none opacity-0":
             currentEditorState != "welcome",
@@ -42,7 +42,7 @@ export default function Welcome() {
       {/* Settings Window */}
       <div
         className={clsx(
-          "flex flex-col justify-center items-center py-8 px-5 gap-5 w-150 h-170 bg-primary-bg border border-border-bg rounded-4xl shadow-[0px_0px_100px_0px_#00000080] transition-all ease-in-out duration-500",
+          "flex flex-col justify-center items-center py-8 px-5 gap-5 w-[92vw] max-w-[720px] max-h-[88vh] overflow-y-auto bg-primary-bg border border-border-bg rounded-4xl shadow-[0px_0px_100px_0px_#00000080] transition-all ease-in-out duration-500",
           {
             "hidden pointer-events-none opacity-0 scale-0":
               currentEditorState != "welcome",
@@ -142,20 +142,18 @@ function Tutorial(props: { index: number; show: boolean }) {
       </h1>
       {TutorialContent[props.index].type == "vid" ? (
         <iframe
-          width="560"
-          height="315"
           src={TutorialContent[props.index].src}
           title="Tutorial"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           referrerPolicy="strict-origin-when-cross-origin"
           allowFullScreen
-        ></iframe>
+          className="w-full aspect-video rounded-2xl border border-border-bg"
+        />
       ) : (
         <img
           src={TutorialContent[props.index].src}
-          width={250}
-          height={250}
+          className="w-full max-w-[320px] h-auto"
           alt="Tutorial"
         />
       )}

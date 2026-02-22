@@ -32,6 +32,39 @@ const Editor = () => {
   // Konva Stage Ref
   const stageRef = useRef<Konva.Stage | null>(null);
 
+  // Guard against duplicate mobile tap creating twice
+  const lastCreateTs = useRef<number>(0);
+
+  // Responsive viewport size (important for mobile/tablet + address bar resizing)
+  const [viewport, setViewport] = useState(() => {
+    const vv = window.visualViewport;
+    return {
+      width: vv?.width ?? window.innerWidth,
+      height: vv?.height ?? window.innerHeight,
+    };
+  });
+
+  useEffect(() => {
+    const update = () => {
+      const vv = window.visualViewport;
+      setViewport({
+        width: vv?.width ?? window.innerWidth,
+        height: vv?.height ?? window.innerHeight,
+      });
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
+
+    return () => {
+      window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
+    };
+  }, []);
+
   const [nodeList, updateNodeList] = useAtom(Nodes);
   const [currSelected, setCurrSelected] = useAtom(currentSelected);
   const [transitionTracker, setTransitionTracker] = useAtom(arrowStates);
@@ -74,8 +107,6 @@ const Editor = () => {
       }
 
       // If there's a reverse edge, curve both edges with the same "side".
-      // Because the perpendicular flips when you reverse direction,
-      // this puts q0->q1 on top and q1->q0 on the bottom (for a left/right pair).
       const side: -1 | 0 | 1 = hasReverse ? -1 : 0;
 
       return computeArrowPoints(fromNode, toNode, { side });
@@ -135,8 +166,8 @@ const Editor = () => {
     getPoints,
   ]);
 
-  // Handle Creating Nodes by clicking
-  function handleEditorClick(e: KonvaEventObject<MouseEvent>) {
+  // Handle Creating Nodes by clicking on EMPTY canvas
+  function handleEditorClick(e: KonvaEventObject<MouseEvent | TouchEvent>) {
     // Return if not in create mode, and deselects if a node is selected
     if (currentEditorState !== "create") {
       if (currSelected !== "nil" && layerRef.current) {
@@ -164,6 +195,11 @@ const Editor = () => {
     const clickPos = group.getRelativePointerPosition();
     if (!clickPos) return;
 
+    // Guard against mobile tap firing twice (touch + synthetic click)
+    const now = performance.now();
+    if (now - lastCreateTs.current < 250) return;
+    lastCreateTs.current = now;
+
     // if node is the first one, then make it the starting state
     if (nodeList.length === 0) {
       setStartState("0");
@@ -186,11 +222,10 @@ const Editor = () => {
     ]);
   }
 
-  // Handle Node Deletion/Selection
+  // Handle Node Deletion/Selection/Connect
   function handleNodeClick(id: number) {
     if (!layerRef.current) return;
 
-    // If editor state is set to delete mode, remove the state
     const clickedNode = layerRef.current.findOne(
       `#${id}`,
     ) as Konva.Circle | null;
@@ -210,16 +245,12 @@ const Editor = () => {
           const tre = layerRef.current!.findOne(
             `#tr${tr.id}`,
           ) as Konva.Arrow | null;
-          if (tre) {
-            tre.destroy(); // Delete the arrow
-          }
+          if (tre) tre.destroy();
 
           const trText = layerRef.current!.findOne(
             `#trtext${tr.id}`,
           ) as Konva.Text | null;
-          if (trText) {
-            trText.destroy(); // Also delete the Label of the transition
-          }
+          if (trText) trText.destroy();
 
           // Delete the transition for the other node participating in the state
           if (tr.from === id && tr.to !== undefined) {
@@ -240,10 +271,7 @@ const Editor = () => {
             }
           }
 
-          // remove the arrow entry from the array (keep index holes)
-          delete (transitions as unknown as Array<typeof tr | undefined>)[
-            tr.id
-          ];
+          delete (transitions as unknown as Array<typeof tr | undefined>)[tr.id];
         }
       });
 
@@ -253,16 +281,12 @@ const Editor = () => {
       delete (nodeList as unknown as Array<Node | undefined>)[id];
       updateNodeList(nodeList);
 
-      // If the deleted Node is the one currently selected
-      // Then deselect it
       if (currSelected === String(id)) setCurrSelected("nil");
-
       return;
     }
 
     // If current editor state is connect
     if (currentEditorState === "connect") {
-      // Track which two states are clicked on
       if (transitionTracker === undefined) {
         setTransitionTracker(id);
         return;
@@ -274,7 +298,6 @@ const Editor = () => {
           return;
         }
 
-        // Checks if a transition between selected state(s) already exists to prevent dupe transitions
         for (const tr of fromNode.transitions) {
           if (tr.to !== null && tr.to === id) {
             setTransitionTracker(undefined);
@@ -286,7 +309,6 @@ const Editor = () => {
 
         const points = getPoints(transitionTracker, id);
 
-        // Decide if this edge is actually curved (middle point not collinear).
         const isCurved =
           points.length === 6 &&
           Math.abs(
@@ -303,13 +325,11 @@ const Editor = () => {
           strokeWidth: 2,
           fill: "#ffffffe6",
           name: `transition ${transitions.length + 1}`,
-          // self-loop gets tension 1, curved bidirectional edges get 0.5, straight edges 0
           tension: transitionTracker === id ? 1 : isCurved ? 0.5 : 0,
         };
 
         transitions.push(newTransition);
 
-        // If this new edge completes a bidirectional pair, also curve the reverse edge.
         if (transitionTracker !== id) {
           const reverse = transitions.find(
             (tr, index) =>
@@ -319,8 +339,6 @@ const Editor = () => {
               tr.to === transitionTracker,
           );
           if (reverse) {
-            // Recompute its points now that a back-edge exists;
-            // computeArrowPoints will pick the opposite `side`.
             reverse.points = getPoints(reverse.from, reverse.to);
             reverse.tension = 0.5;
           }
@@ -328,7 +346,6 @@ const Editor = () => {
 
         updateTransitions([...transitions]);
 
-        // Add this transition to the corresponding node
         fromNode.transitions.push({
           from: undefined,
           to: id,
@@ -349,14 +366,12 @@ const Editor = () => {
 
     if (!clickedNode) return;
 
-    // Draw a stroke around the selected node
     clickedNode.to({
       duration: 0.1,
       strokeWidth: 2,
       easing: Konva.Easings.EaseInOut,
     });
 
-    // Deselect the old node if any available
     if (currSelected !== "nil") {
       const oldNode = layerRef.current.findOne(
         `#${currSelected}`,
@@ -371,13 +386,8 @@ const Editor = () => {
       }
     }
 
-    // If same node is clicked, toggle selection
-    if (currSelected === String(id)) {
-      setCurrSelected("nil");
-    } else {
-      // Update value of current selected
-      setCurrSelected(String(id));
-    }
+    if (currSelected === String(id)) setCurrSelected("nil");
+    else setCurrSelected(String(id));
   }
 
   // Handle Updating Node Positions when dragged around
@@ -395,7 +405,6 @@ const Editor = () => {
     nodeList[id]!.y = draggedNode.y();
     updateNodeList(nodeList);
 
-    // Update position of arrows if they exist
     if (nodeList[id]!.transitions.length > 0) {
       nodeList[id]!.transitions.forEach((tr) => {
         let points: number[] = [];
@@ -408,19 +417,14 @@ const Editor = () => {
           points = getPoints(tr.from, id);
         }
 
-        // Update points in the global store
         transitions[tr.trId].points = points;
         updateTransitions(transitions);
 
-        // Update position on the editor
         const arr = layerRef.current!.findOne(
           `#tr${tr.trId}`,
         ) as Konva.Arrow | null;
-        if (arr) {
-          arr.points(points);
-        }
+        if (arr) arr.points(points);
 
-        // Update Position of text
         const trText = layerRef.current!.findOne(
           `#trtext${tr.trId}`,
         ) as Konva.Text | null;
@@ -437,7 +441,7 @@ const Editor = () => {
     e.evt.preventDefault();
 
     const stage = stageRef.current;
-       if (!stage) return;
+    if (!stage) return;
 
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
@@ -448,14 +452,8 @@ const Editor = () => {
       y: (pointer.y - stage.y()) / oldScale,
     };
 
-    // how to scale? Zoom in? Or zoom out?
     let direction = e.evt.deltaY > 0 ? 1 : -1;
-
-    // when we zoom on trackpad, e.evt.ctrlKey is true
-    // in that case lets revert direction
-    if (e.evt.ctrlKey) {
-      direction = -direction;
-    }
+    if (e.evt.ctrlKey) direction = -direction;
 
     const scaleBy = 1.01;
     const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
@@ -472,12 +470,18 @@ const Editor = () => {
   return (
     <>
       <Stage
-        width={window.innerWidth}
-        height={window.innerHeight}
+        width={Math.floor(viewport.width)}
+        height={Math.floor(viewport.height)}
         draggable={currentEditorState === "grab"}
-        onClick={handleEditorClick}
+        onMouseDown={handleEditorClick}
+        onTouchStart={(e) => {
+          e.evt.preventDefault();
+          handleEditorClick(e);
+        }}
         ref={stageRef}
         onWheel={handleWheel}
+        style={{ touchAction: "none" }}
+        onTouchMove={(e) => e.evt.preventDefault()}
       >
         <Layer ref={layerRef}>
           <Group>
@@ -489,10 +493,16 @@ const Editor = () => {
                     x={node.x}
                     y={node.y}
                     id={`g${node.id}`}
-                    draggable={
-                      !["create", "delete"].includes(currentEditorState)
-                    }
-                    onClick={() => handleNodeClick(node.id)}
+                    draggable={!["create", "delete"].includes(currentEditorState)}
+                    onMouseDown={(e) => {
+                      e.cancelBubble = true; // stop Stage from also handling
+                      handleNodeClick(node.id);
+                    }}
+                    onTouchStart={(e) => {
+                      e.evt.preventDefault();
+                      e.cancelBubble = true;
+                      handleNodeClick(node.id);
+                    }}
                     onDragMove={() => handleNodeDrag(node.id)}
                   >
                     <Circle
@@ -505,14 +515,13 @@ const Editor = () => {
                       stroke={node.strokeColor}
                     />
 
-                    {/* If state is final, draw an extra outer circle */}
                     {node.type === "final" && (
                       <Circle
                         x={0}
                         y={0}
                         id={`${node.id}`}
                         radius={2 * node.name.length + node.radius + 5}
-                        fill={"transparent"}
+                        fill="transparent"
                         strokeWidth={3}
                         stroke={node.fill}
                       />
@@ -529,7 +538,6 @@ const Editor = () => {
                       align="center"
                     />
 
-                    {/* If state is initial, draw an incoming arrow */}
                     {node.type === "initial" && (
                       <Arrow
                         x={-1 * (node.radius + 40)}
@@ -538,20 +546,20 @@ const Editor = () => {
                         points={[-node.radius / 1.5, 0, node.radius - 5, 0]}
                         pointerLength={10}
                         pointerWidth={10}
-                        fill={"#ffffff80"}
-                        stroke={"#ffffff80"}
+                        fill="#ffffff80"
+                        stroke="#ffffff80"
                         strokeWidth={3}
                       />
                     )}
                   </Group>
                 ),
             )}
+
             {/* Transition Arrows */}
             {transitions.map(
               (tr) =>
                 tr && (
                   <Group key={tr.id}>
-                    {/* Transition arrow object */}
                     <Arrow
                       key={tr.id}
                       id={`tr${tr.id}`}
@@ -561,7 +569,8 @@ const Editor = () => {
                       points={tr.points}
                       tension={tr.tension}
                     />
-                    {/* Add a Label to the middle of the arrow */}
+
+                    {/* Label */}
                     <Text
                       id={`trtext${tr.id}`}
                       x={tr.points[2] - 2 * tr.name.length}
@@ -570,11 +579,25 @@ const Editor = () => {
                       fontSize={16}
                       fill="#ffffff"
                       align="center"
-                      onClick={() =>
-                        currentEditorState !== "create" &&
-                        currentEditorState !== "delete" &&
-                        setTrNameEditor([true, tr.name, tr.id])
-                      }
+                      onMouseDown={(e) => {
+                        e.cancelBubble = true;
+                        if (
+                          currentEditorState === "create" ||
+                          currentEditorState === "delete"
+                        )
+                          return;
+                        setTrNameEditor([true, tr.name, tr.id]);
+                      }}
+                      onTouchStart={(e) => {
+                        e.evt.preventDefault();
+                        e.cancelBubble = true;
+                        if (
+                          currentEditorState === "create" ||
+                          currentEditorState === "delete"
+                        )
+                          return;
+                        setTrNameEditor([true, tr.name, tr.id]);
+                      }}
                     />
                   </Group>
                 ),
@@ -614,22 +637,19 @@ const Editor = () => {
                 `#trtext${transitionIndex}`,
               ) as Konva.Text | null;
 
-              if (trNameEditor[1].trim().length === 0) return; // Prevent empty transition names
-
+              if (trNameEditor[1].trim().length === 0) return;
               if (!trText) return;
 
-              trText.text(trNameEditor[1]); // Update transition text
-              transitions[transitionIndex].name = trNameEditor[1]; // Update transition name in store
+              trText.text(trNameEditor[1]);
+              transitions[transitionIndex].name = trNameEditor[1];
               updateTransitions(transitions);
 
-              // Update location of text
               trText.x(
                 transitions[transitionIndex].points[2] -
                   3 * trNameEditor[1].length,
               );
               trText.y(transitions[transitionIndex].points[3] - 20);
 
-              // Reset editor state
               setTrNameEditor([false, "", undefined]);
             }}
             className="rounded-xl text-black bg-blue-500 ml-2 px-2 py-2 hover:scale-110 transition-all cursor-pointer active:scale-95 ease-in-out"
@@ -679,27 +699,21 @@ const Editor = () => {
 
           <button
             onClick={() => {
-              // Save the FSM to disk
-
               if (saveFSM[1].trim() === "") {
                 window.alert("Enter a valid file name");
                 return;
               }
-
               if (!layerRef.current) return;
 
-              const group = layerRef.current.findOne(
-                "Group",
-              ) as Konva.Node | null;
+              const group = layerRef.current.findOne("Group") as Konva.Node | null;
               if (!group) return;
 
               const dataUrl = group.toDataURL({
-                pixelRatio: saveFSM[0], // Resolution
+                pixelRatio: saveFSM[0],
               });
 
               const link = document.createElement("a");
-
-              link.download = saveFSM[1]; // Name
+              link.download = saveFSM[1];
               link.href = dataUrl;
               document.body.appendChild(link);
               link.click();

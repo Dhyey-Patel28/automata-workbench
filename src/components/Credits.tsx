@@ -1,6 +1,6 @@
 export default function Credits() {
     return (
-        <div className="fixed bottom-3 left-3 z-10 select-none text-xs font-github text-white/50 hover:text-white/80">
+        <div className="fixed left-3 z-10 select-none text-xs font-github text-white/50 hover:text-white/80 bottom-20 sm:bottom-3">
             <a
                 href="https://github.com/karthik-saiharsh/fsm-engine/tree/ecf47d0293c1cf5d07395802e094c26694fed997"
                 target="_blank"

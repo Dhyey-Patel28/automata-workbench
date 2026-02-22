@@ -21,7 +21,7 @@ function App() {
     <>
       <div
         id="editorwin"
-        className="w-screen h-screen overflow-x-hidden overflow-y-hidden bg-primary-bg"
+        className="w-screen h-[100dvh] overflow-hidden bg-primary-bg"
       >
         <GridLines
           className="grid-area"

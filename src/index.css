@@ -18,3 +18,18 @@
 
 	--color-input-active: #b1b1b1;
 }
+
+/* Make the editor behave like a full-screen app on mobile/tablet */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Prevent browser scroll/zoom gestures from fighting the Konva canvas */
+canvas {
+  touch-action: none;
+}

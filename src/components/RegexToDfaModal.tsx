@@ -59,7 +59,7 @@ const RegexToDfaModal = () => {
 	return (
 		<div
 			className={clsx(
-				"absolute top-0 left-0 z-30 w-screen h-screen bg-[#1e1e1ebb] flex justify-center items-center transition-all ease-in-out duration-500 max-lg:hidden",
+				"fixed inset-0 z-40 w-screen h-screen bg-[#1e1e1ebb] flex justify-center items-center transition-all ease-in-out duration-500 p-3",
 				{
 					"hidden pointer-events-none opacity-0": !isOpen,
 				},
@@ -67,7 +67,7 @@ const RegexToDfaModal = () => {
 		>
 			<div
 				className={clsx(
-					"flex flex-col gap-4 w-150 max-w-180 bg-primary-bg border border-border-bg rounded-4xl shadow-[0px_0px_100px_0px_#00000080] p-8 transition-all ease-in-out duration-500",
+					"flex flex-col gap-4 w-[92vw] max-w-[720px] bg-primary-bg border border-border-bg rounded-4xl shadow-[0px_0px_100px_0px_#00000080] p-6 sm:p-8 transition-all ease-in-out duration-500",
 					{
 						"hidden pointer-events-none opacity-0 scale-0": !isOpen,
 					},

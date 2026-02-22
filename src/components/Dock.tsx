@@ -81,13 +81,16 @@ const Dock = () => {
     }
   }
 
-  // Always-visible modes (icon-only)
   const ModeItems = [
     {
       name: "Pan",
       condition: [currentState != "grab", currentState == "grab"],
       icon: (
-        <Move3d size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        <Move3d
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
       ),
       onclick: () => setCurrentState(currentState === "grab" ? "nil" : "grab"),
     },
@@ -95,23 +98,37 @@ const Dock = () => {
       name: "Add state",
       condition: [currentState != "create", currentState == "create"],
       icon: (
-        <PlusCircleIcon size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        <PlusCircleIcon
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
       ),
-      onclick: () => setCurrentState(currentState === "create" ? "nil" : "create"),
+      onclick: () =>
+        setCurrentState(currentState === "create" ? "nil" : "create"),
     },
     {
       name: "Delete",
       condition: [currentState != "delete", currentState == "delete"],
       icon: (
-        <MinusCircleIcon size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        <MinusCircleIcon
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
       ),
-      onclick: () => setCurrentState(currentState === "delete" ? "nil" : "delete"),
+      onclick: () =>
+        setCurrentState(currentState === "delete" ? "nil" : "delete"),
     },
     {
       name: "State settings",
       condition: [currentState != "settings", currentState == "settings"],
       icon: (
-        <Settings size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        <Settings
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
       ),
       onclick: () => {
         if (currSelected !== "nil") {
@@ -125,7 +142,11 @@ const Dock = () => {
       name: "Connect",
       condition: [currentState != "connect", currentState == "connect"],
       icon: (
-        <Cable size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+        <Cable
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
       ),
       onclick: () => {
         if (currentState == "connect") setCurrentState("nil");
@@ -137,24 +158,41 @@ const Dock = () => {
     },
   ];
 
-  // Collapsed tools (opens from the “…” button)
   const ToolItems = [
     {
       name: "Regex → DFA",
       active: regexModalOpen,
-      icon: <Code2 size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      icon: (
+        <Code2
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
       onclick: () => setRegexModal(!regexModalOpen),
     },
     {
       name: "DFA → Regex",
       active: false,
-      icon: <Code2 size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      icon: (
+        <Code2
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
       onclick: handleDfaToRegexClick,
     },
     {
       name: "NFA → Min DFA",
       active: false,
-      icon: <GitBranch size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      icon: (
+        <GitBranch
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
       onclick: () => {
         try {
           const result = nfaToMinimalDfa(nodeList, transitions);
@@ -177,13 +215,25 @@ const Dock = () => {
     {
       name: saveFSM ? "Save FSM (on)" : "Save FSM",
       active: saveFSM,
-      icon: <HardDriveDownload size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      icon: (
+        <HardDriveDownload
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
       onclick: () => setSaveFSM(!saveFSM),
     },
     {
       name: "Export JSON",
       active: false,
-      icon: <ArrowRightFromLine size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
+      icon: (
+        <ArrowRightFromLine
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
       onclick: () => {
         const simplifiedJsonData = nodeList.map((node) => ({
           name: node.name,
@@ -197,14 +247,26 @@ const Dock = () => {
     {
       name: "Tutorial / Help",
       active: currentState === "welcome",
-      icon: <HelpCircle size={DockIconSize} color={DockIconColor} className="pointer-events-none" />,
-      onclick: () => setCurrentState(currentState === "welcome" ? "nil" : "welcome"),
+      icon: (
+        <HelpCircle
+          size={DockIconSize}
+          color={DockIconColor}
+          className="pointer-events-none"
+        />
+      ),
+      onclick: () =>
+        setCurrentState(currentState === "welcome" ? "nil" : "welcome"),
     },
   ];
 
   return (
-    <div className="absolute bottom-5 w-screen flex justify-center items-center select-none max-lg:hidden">
-      <div className="relative w-fit px-2 h-14 z-10 bg-secondary-bg rounded-2xl border border-border-bg flex justify-center items-center gap-2 shadow-[0px_0px_30px_0px_rgba(0,0,0,0.45)]">
+    <div
+      className="fixed inset-x-0 z-50 flex justify-center items-center select-none bottom-[calc(1.25rem+env(safe-area-inset-bottom))] px-2"
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+    >
+      {/* Dock bar */}
+      <div className="relative max-w-[95vw] overflow-x-auto w-fit px-2 h-14 z-10 bg-secondary-bg rounded-2xl border border-border-bg flex justify-center items-center gap-2 shadow-[0px_0px_30px_0px_rgba(0,0,0,0.45)]">
         {ModeItems.map((item) => (
           <button
             key={item.name}
@@ -231,38 +293,58 @@ const Dock = () => {
         <button
           type="button"
           title="Tools"
-          onClick={() => setToolsOpen((v) => !v)}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setToolsOpen((v) => !v);
+          }}
           className={clsx(
             "flex items-center justify-center p-3 border border-border-bg rounded-xl cursor-pointer transition-all duration-200 hover:scale-105",
             { "bg-blue-500": toolsOpen, "bg-secondary-bg": !toolsOpen },
           )}
         >
-          <MoreHorizontal size={DockIconSize} color={DockIconColor} className="pointer-events-none" />
+          <MoreHorizontal
+            size={DockIconSize}
+            color={DockIconColor}
+            className="pointer-events-none"
+          />
         </button>
-
-        {toolsOpen && (
-          <div className="absolute bottom-16 right-0 w-56 bg-primary-bg border border-border-bg rounded-2xl shadow-[0px_0px_60px_0px_rgba(0,0,0,0.55)] p-2">
-            {ToolItems.map((tool) => (
-              <button
-                key={tool.name}
-                type="button"
-                title={tool.name}
-                onClick={() => {
-                  tool.onclick();
-                  setToolsOpen(false);
-                }}
-                className={clsx(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-xl border border-transparent hover:border-border-bg transition-all",
-                  { "bg-blue-500/20": tool.active },
-                )}
-              >
-                {tool.icon}
-                <span className="text-white font-github text-sm">{tool.name}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Dropdown OUTSIDE the overflow container (fixes iOS clipping) */}
+      {toolsOpen && (
+        <div
+          className="
+            fixed left-1/2 -translate-x-1/2
+            bottom-[calc(5.25rem+env(safe-area-inset-bottom))]
+            w-56 max-w-[92vw]
+            bg-primary-bg border border-border-bg rounded-2xl
+            shadow-[0px_0px_60px_0px_rgba(0,0,0,0.55)]
+            p-2 z-[999]
+          "
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
+          {ToolItems.map((tool) => (
+            <button
+              key={tool.name}
+              type="button"
+              title={tool.name}
+              onClick={() => {
+                tool.onclick();
+                setToolsOpen(false);
+              }}
+              className={clsx(
+                "w-full flex items-center gap-3 px-3 py-2 rounded-xl border border-transparent hover:border-border-bg transition-all",
+                { "bg-blue-500/20": tool.active },
+              )}
+            >
+              {tool.icon}
+              <span className="text-white font-github text-sm">{tool.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
